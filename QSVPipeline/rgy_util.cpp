@@ -1102,11 +1102,10 @@ int getEmbeddedResource(void **data, const TCHAR *name, const TCHAR *type, HMODU
 }
 
 #include "rgy_simd.h"
-#include <x86intrin.h>
+#include <immintrin.h>
 
 RGY_NOINLINE int rgy_avx_dummy_if_avail(int bAVXAvail) {
     int ret = 1;
-#ifndef __iamcu__
     if (bAVXAvail) {
         return ret;
     }
@@ -1114,6 +1113,5 @@ RGY_NOINLINE int rgy_avx_dummy_if_avail(int bAVXAvail) {
     y0 = _mm256_xor_ps(y0, y0);
     ret = _mm_cvtsi128_si32(_mm256_castsi256_si128(_mm256_castps_si256(y0)));
     _mm256_zeroupper();
-#endif
     return ret;
 }
