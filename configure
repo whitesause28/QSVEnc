@@ -107,6 +107,8 @@ ENABLE_LIBASS=1
 DTL_CFLAGS=""
 ENABLE_DTL=1
 
+ENABLE_AVX=1
+
 print_help()
 {
 cat << EOF
@@ -359,6 +361,9 @@ printf "checking for _xgetbv()..."
 if ! cxx_check "${CXXFLAGS} ${LDFLAGS}" "" "x86intrin.h" "unsigned int a = 0; auto i = _xgetbv(a);" ; then
     CXXFLAGS="${CXXFLAGS} -DNO_XGETBV_INTRIN=1"
     echo "no"
+    echo "disabling AVX instructions..."
+    ENABLE_AVX=0
+    CXXFLAGS="${CXXFLAGS} -D__iamcu__"
 else
     echo "yes"
 fi
@@ -616,6 +621,7 @@ ASM_QSVPIPELINE="ram_speed_x64.asm cpu_info_x64.asm"
 
 PYW_PERF_MONITOR="perf_monitor.pyw"
 
+if [ $ENABLE_AVX -ne 0 ]; then
 SRC_PLUGIN_DELOGO=" \
 delogo_process_avx.cpp    delogo_process_avx2.cpp \
 delogo_process_sse41.cpp  logo.cpp \
@@ -625,6 +631,15 @@ SRC_PLUGIN_SUBBURN=" \
 subburn_process_avx.cpp    subburn_process_avx2.cpp \
 subburn_process_sse41.cpp  subburn_process_sse41_pshub_slow.cpp \
 plugin_subburn.cpp"
+else
+SRC_PLUGIN_DELOGO=" \
+delogo_process_sse41.cpp  logo.cpp \
+plugin_delogo.cpp"
+
+SRC_PLUGIN_SUBBURN=" \
+subburn_process_sse41.cpp  subburn_process_sse41_pshub_slow.cpp \
+plugin_subburn.cpp"
+fi
 
 SRC_PLUGIN_ROTATE="plugin_rotate.cpp"
 
@@ -705,6 +720,7 @@ write_qsv_config "#define ENABLE_FEATURE_COP3_AND_ABOVE 0"
 write_qsv_config "#define ENABLE_AVCODEC_OUT_THREAD     1"
 write_qsv_config "#define ENABLE_CPP_REGEX              $ENABLE_CPP_REGEX"
 write_qsv_config "#define ENABLE_DTL                    $ENABLE_DTL"
+write_qsv_config "#define ENABLE_AVX                    $ENABLE_AVX"
 
 echo successfully generated config.mak, rgy_config.h
 
